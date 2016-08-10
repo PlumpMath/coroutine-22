@@ -17,21 +17,24 @@
 
 struct coroutine;
 
+static int number = 0;
 class FunTrace
 {
 public:
 	FunTrace(const char *fun)
 	{
 		_fun = fun;
-		printf("=================INTO===== %s\n", _fun);
+		_number = number++;
+		printf("=================INTO===== %s : funid %d \n", _fun, number);
 	}
 
 	virtual ~FunTrace()
 	{
-		printf("=================EXIT===== %s\n", _fun);
+		printf("=================EXIT===== ~%s : funid %d \n", _fun, number);
 	}
 
 	const char *_fun;
+	int _number;
 };
 
 #define __TRACE
