@@ -125,7 +125,7 @@ int coroutine_new(struct schedule *S, coroutine_func func, void *ud)
 	struct coroutine *co = _co_new(S, func, ud);
 	if (S->nco >= S->cap) {
 		int id = S->cap;
-		S->co = realloc(S->co, S->cap * 2 * sizeof(struct coroutine *));
+		S->co = (struct coroutine **)realloc(S->co, S->cap * 2 * sizeof(struct coroutine *));
 		memset(S->co + S->cap, 0, sizeof(struct coroutine *) * S->cap);
 		S->co[S->cap] = co;
 		S->cap *= 2;
@@ -207,7 +207,7 @@ static void _save_stack(struct coroutine *C, char *top)
 	if (C->cap < top - &dummy) {
 		free(C->stack);
 		C->cap = top - &dummy;
-		C->stack = malloc(C->cap);
+		C->stack = (char*)malloc(C->cap);
 	}
 	C->size = top - &dummy;
 	memcpy(C->stack, &dummy, C->size);
