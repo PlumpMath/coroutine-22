@@ -25,12 +25,12 @@ public:
 	{
 		_fun = fun;
 		_number = number++;
-		printf("=================INTO===== %s : funid %d \n", _fun, number);
+		printf("=================INTO===== %s : funid %d \n", _fun, _number);
 	}
 
 	virtual ~FunTrace()
 	{
-		printf("=================EXIT===== ~%s : funid %d \n", _fun, number);
+		printf("=================EXIT===== ~%s : funid %d \n", _fun, _number);
 	}
 
 	const char *_fun;
