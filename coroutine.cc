@@ -17,6 +17,31 @@
 
 struct coroutine;
 
+class FunTrace
+{
+public:
+	FunTrace(const char *fun)
+	{
+		_fun = fun;
+		printf("=================INTO===== %s\n", _fun);
+	}
+
+	virtual ~FunTrace()
+	{
+		printf("=================EXIT===== %s\n", _fun);
+	}
+
+	const char *_fun;
+};
+
+#define __TRACE
+
+#ifdef __TRACE
+#define TRACE(fmt)     FunTrace a(fmt);
+#else
+#define TRACE(fmt)
+#endif
+
 struct schedule
 {
 	char stack[STACK_SIZE];
@@ -42,6 +67,8 @@ struct coroutine
 struct coroutine *
 _co_new(struct schedule *S, coroutine_func func, void *ud)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	struct coroutine * co = malloc(sizeof(*co));
 	co->func = func;
 	co->ud = ud;
@@ -55,6 +82,8 @@ _co_new(struct schedule *S, coroutine_func func, void *ud)
 
 void _co_delete(struct coroutine *co)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	free(co->stack);
 	free(co);
 }
@@ -62,6 +91,8 @@ void _co_delete(struct coroutine *co)
 struct schedule *
 coroutine_open(void)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	struct schedule *S = malloc(sizeof(*S));
 	S->nco = 0;
 	S->cap = DEFAULT_COROUTINE;
@@ -73,6 +104,8 @@ coroutine_open(void)
 
 void coroutine_close(struct schedule *S)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	int i;
 	for (i = 0; i < S->cap; i++) {
 		struct coroutine * co = S->co[i];
@@ -87,6 +120,8 @@ void coroutine_close(struct schedule *S)
 
 int coroutine_new(struct schedule *S, coroutine_func func, void *ud)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	struct coroutine *co = _co_new(S, func, ud);
 	if (S->nco >= S->cap) {
 		int id = S->cap;
@@ -113,6 +148,8 @@ int coroutine_new(struct schedule *S, coroutine_func func, void *ud)
 
 static void mainfunc(uint32_t low32, uint32_t hi32)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	uintptr_t ptr = (uintptr_t) low32 | ((uintptr_t) hi32 << 32);
 	struct schedule *S = (struct schedule *) ptr;
 	int id = S->running;
@@ -126,6 +163,8 @@ static void mainfunc(uint32_t low32, uint32_t hi32)
 
 void coroutine_resume(struct schedule * S, int id)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	assert(S->running == -1);
 	assert(id >= 0 && id < S->cap);
 	struct coroutine *C = S->co[id];
@@ -157,6 +196,8 @@ void coroutine_resume(struct schedule * S, int id)
 
 static void _save_stack(struct coroutine *C, char *top)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	char dummy = 0;
 	assert(top - &dummy <= STACK_SIZE);
 	if (C->cap < top - &dummy) {
@@ -170,6 +211,8 @@ static void _save_stack(struct coroutine *C, char *top)
 
 void coroutine_yield(struct schedule * S)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	int id = S->running;
 	assert(id >= 0);
 	struct coroutine * C = S->co[id];
@@ -182,6 +225,8 @@ void coroutine_yield(struct schedule * S)
 
 int coroutine_status(struct schedule * S, int id)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	assert(id >= 0 && id < S->cap);
 	if (S->co[id] == NULL) {
 		return COROUTINE_DEAD;
@@ -191,6 +236,8 @@ int coroutine_status(struct schedule * S, int id)
 
 int coroutine_running(struct schedule * S)
 {
+	TRACE(__PRETTY_FUNCTION__);
+
 	return S->running;
 }
 
