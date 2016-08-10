@@ -69,7 +69,7 @@ _co_new(struct schedule *S, coroutine_func func, void *ud)
 {
 	TRACE(__PRETTY_FUNCTION__);
 
-	struct coroutine * co = malloc(sizeof(*co));
+	struct coroutine * co = (struct coroutine *)malloc(sizeof(*co));
 	co->func = func;
 	co->ud = ud;
 	co->sch = S;
@@ -93,11 +93,11 @@ coroutine_open(void)
 {
 	TRACE(__PRETTY_FUNCTION__);
 
-	struct schedule *S = malloc(sizeof(*S));
+	struct schedule *S = (struct schedule *)malloc(sizeof(*S));
 	S->nco = 0;
 	S->cap = DEFAULT_COROUTINE;
 	S->running = -1;
-	S->co = malloc(sizeof(struct coroutine *) * S->cap);
+	S->co = (struct coroutine **)malloc(sizeof(struct coroutine *) * S->cap);
 	memset(S->co, 0, sizeof(struct coroutine *) * S->cap);
 	return S;
 }
@@ -173,6 +173,7 @@ void coroutine_resume(struct schedule * S, int id)
 	int status = C->status;
 	switch (status) {
 	case COROUTINE_READY:
+	{
 		getcontext(&C->ctx);
 		C->ctx.uc_stack.ss_sp = S->stack;
 		C->ctx.uc_stack.ss_size = STACK_SIZE;
@@ -182,12 +183,15 @@ void coroutine_resume(struct schedule * S, int id)
 		uintptr_t ptr = (uintptr_t) S;
 		makecontext(&C->ctx, (void (*)(void)) mainfunc, 2, (uint32_t) ptr, (uint32_t) (ptr >> 32));
 		swapcontext(&S->main, &C->ctx);
+	}
 		break;
 	case COROUTINE_SUSPEND:
+	{
 		memcpy(S->stack + STACK_SIZE - C->size, C->stack, C->size);
 		S->running = id;
 		C->status = COROUTINE_RUNNING;
 		swapcontext(&S->main, &C->ctx);
+	}
 		break;
 	default:
 		assert(0);
